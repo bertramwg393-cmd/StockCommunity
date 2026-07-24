@@ -1,0 +1,7 @@
+spring.application.name=stockcommunity
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/stockcommunity
+spring.datasource.username=postgres
+spring.datasource.password=你的資料庫密碼
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
