@@ -4,6 +4,7 @@ import com.stockcommunity.demo.dto.LoginRequest;
 import com.stockcommunity.demo.dto.RegisterRequest;
 import com.stockcommunity.demo.entity.User;
 import com.stockcommunity.demo.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +22,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         try {
             User user = userService.register(request.getUsername(), request.getPassword(), request.getEmail());
             return ResponseEntity.ok(user);
@@ -31,7 +32,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
             User user = userService.login(request.getUsername(), request.getPassword());
             return ResponseEntity.ok(user);

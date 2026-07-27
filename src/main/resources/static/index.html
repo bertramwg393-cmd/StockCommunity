@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>StockCommunity 測試頁</title>
+</head>
+<body>
+    <h2>註冊</h2>
+    <input id="reg-username" placeholder="帳號" required><br>
+    <input id="reg-password" type="password" placeholder="密碼" required><br>
+    <input id="reg-email" placeholder="Email" required><br>
+    <button onclick="register()">註冊</button>
+    <p id="reg-result"></p>
+
+    <hr>
+
+    <h2>登入</h2>
+    <input id="login-username" placeholder="帳號" required><br>
+    <input id="login-password" type="password" placeholder="密碼" required><br>
+    <button onclick="login()">登入</button>
+    <p id="login-result"></p>
+
+    <script>
+        function register() {
+            const body = {
+                username: document.getElementById('reg-username').value,
+                password: document.getElementById('reg-password').value,
+                email: document.getElementById('reg-email').value
+            };
+            fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+                .then(res => {
+                    return res.text().then(text => {
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch (e) {
+                            data = text;
+                        }
+                        return { status: res.status, data: data };
+                    });
+                })
+                .then(result => {
+                    const status = result.status;
+                    const data = result.data;
+
+                    if (status === 200) {
+                        document.getElementById('reg-result').innerText = '註冊成功：' + data.username;
+                    } else {
+                        document.getElementById('reg-result').innerText = '註冊失敗：' + data;
+                    }
+                });
+        }
+
+        function login() {
+            const body = {
+                username: document.getElementById('login-username').value,
+                password: document.getElementById('login-password').value
+            };
+
+            fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+                .then(res => {
+                    return res.text().then(text => {
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch (e) {
+                            data = text;
+                        }
+                        return { status: res.status, data: data };
+                    });
+                })
+                .then(result => {
+                    const status = result.status;
+                    const data = result.data;
+
+                    if (status === 200) {
+                        document.getElementById('login-result').innerText = '登入成功：' + data.username;
+                    } else {
+                        document.getElementById('login-result').innerText = '登入失敗：' + data;
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
