@@ -83,10 +83,10 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- 資料庫 Driver，看你要用 PostgreSQL 還是 MySQL 二選一 -->
+		<!-- 資料庫 Driver：SQL Server -->
 		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>mssql-jdbc</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
