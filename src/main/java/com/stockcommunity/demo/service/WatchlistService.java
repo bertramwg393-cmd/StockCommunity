@@ -34,22 +34,28 @@ public class WatchlistService {
         return watchlistItemRepository.save(watchlistItem);
     }
 
-    // 查某會員底下所有清單
+    public void removeWatchlistItem(Long itemId, Long memberId) {
+        WatchlistItem item = watchlistItemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+        Watchlist watchlist = watchlistRepository.findById(item.getWatchlistId())
+                .orElseThrow(() -> new IllegalArgumentException("Watchlist not found"));
+        if (!watchlist.getMemberId().equals(memberId)) {
+            throw new SecurityException("無權限刪除此項目");
+        }
+        watchlistItemRepository.deleteById(itemId);
+    }
+
     public List<Watchlist> findWatchlistsByMemberId(Long memberId) {
         return watchlistRepository.findByMemberId(memberId);
     }
 
-    // 查某清單底下所有股票
     public List<WatchlistItem> findWatchlistItemsByWatchlistId(Long watchlistId) {
         return watchlistItemRepository.findByWatchlistId(watchlistId);
     }
 
-    // 用清單 id 查一個清單
     public Watchlist findWatchlistById(Long watchlistId) {
         return watchlistRepository.findById(watchlistId)
                 .orElseThrow(() -> new IllegalArgumentException("Watchlist not found"));
     }
-
-
 
 }
