@@ -20,6 +20,7 @@ public class WatchlistService {
         this.watchlistItemRepository = watchlistItemRepository;
     }
 
+    // 建立新的自選股清單
     public Watchlist createWatchlist(Long memberId, String name) {
         Watchlist watchlist = new Watchlist();
         watchlist.setMemberId(memberId);
@@ -27,6 +28,7 @@ public class WatchlistService {
         return watchlistRepository.save(watchlist);
     }
 
+    // 把一檔股票加進指定清單
     public WatchlistItem addWatchlistItem(Long watchlistId, String stockCode) {
         WatchlistItem watchlistItem = new WatchlistItem();
         watchlistItem.setWatchlistId(watchlistId);
@@ -34,6 +36,8 @@ public class WatchlistService {
         return watchlistItemRepository.save(watchlistItem);
     }
 
+    // 移除清單裡的一檔股票
+    // memberId 是目前登入者，用來確認這個項目所屬的清單真的是他自己的，不能刪別人的
     public void removeWatchlistItem(Long itemId, Long memberId) {
         WatchlistItem item = watchlistItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Item not found"));
@@ -45,14 +49,17 @@ public class WatchlistService {
         watchlistItemRepository.deleteById(itemId);
     }
 
+    // 查某個會員底下所有的自選股清單
     public List<Watchlist> findWatchlistsByMemberId(Long memberId) {
         return watchlistRepository.findByMemberId(memberId);
     }
 
+    // 查某個清單底下所有的股票項目
     public List<WatchlistItem> findWatchlistItemsByWatchlistId(Long watchlistId) {
         return watchlistItemRepository.findByWatchlistId(watchlistId);
     }
 
+    // 用清單 id 查一筆清單，查不到就丟例外
     public Watchlist findWatchlistById(Long watchlistId) {
         return watchlistRepository.findById(watchlistId)
                 .orElseThrow(() -> new IllegalArgumentException("Watchlist not found"));

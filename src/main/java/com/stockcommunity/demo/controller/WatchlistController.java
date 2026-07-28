@@ -26,6 +26,8 @@ public class WatchlistController {
         this.userRepository = userRepository;
     }
 
+    // 從目前的登入狀態（JWT Filter 已驗證過）解出使用者名稱，再查出對應的 memberId
+    // 不接受前端自己傳 memberId，避免有人偽造別人的 id
     private Long getCurrentMemberId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
@@ -34,6 +36,7 @@ public class WatchlistController {
         return user.getId();
     }
 
+    // 建立新清單，歸屬於目前登入的會員
     @PostMapping
     public ResponseEntity<?> createWatchlist(@RequestBody CreateWatchlistRequest request) {
         try {
@@ -45,6 +48,7 @@ public class WatchlistController {
         }
     }
 
+    // 加股票進清單前先確認這個清單是不是自己的，不是就回傳 403
     @PostMapping("/{watchlistId}/items")
     public ResponseEntity<?> addWatchlistItem(
             @PathVariable Long watchlistId,
@@ -62,6 +66,7 @@ public class WatchlistController {
         }
     }
 
+    // 移除清單裡的股票項目，權限檢查邏輯寫在 Service 層
     @DeleteMapping("/items/{itemId}")
     public ResponseEntity<?> removeWatchlistItem(@PathVariable Long itemId) {
         try {
@@ -75,6 +80,7 @@ public class WatchlistController {
         }
     }
 
+    // 查目前登入者自己的所有清單，不用也不能查別人的
     @GetMapping("/mine")
     public ResponseEntity<List<Watchlist>> getMyWatchlists() {
         Long memberId = getCurrentMemberId();
@@ -82,6 +88,7 @@ public class WatchlistController {
         return ResponseEntity.ok(watchlists);
     }
 
+    // 查清單裡的股票前，一樣先確認清單是不是自己的
     @GetMapping("/{watchlistId}/items")
     public ResponseEntity<?> getWatchlistItems(@PathVariable Long watchlistId) {
         Long memberId = getCurrentMemberId();
