@@ -23,7 +23,22 @@
     <button onclick="login()">登入</button>
     <p id="login-result"></p>
 
+    <hr>
+
+    <h2>建立訂單</h2>
+    <input id="order-stockCode" placeholder="股票代號 (例如 2330)" required><br>
+    <input id="order-type" placeholder="BUY 或 SELL" required><br>
+    <input id="order-quantity" type="number" placeholder="股數" required><br>
+    <input id="order-price" type="number" placeholder="價格" required><br>
+    <button onclick="createOrder()">送出訂單</button>
+    <p id="order-result"></p>
+
+    <button onclick="getMyOrders()">查詢我的訂單</button>
+    <pre id="orders-list"></pre>
+
     <script>
+        let currentToken = '';
+
         function register() {
             const body = {
                 username: document.getElementById('reg-username').value,
@@ -85,10 +100,59 @@
                     const data = result.data;
 
                     if (status === 200) {
+                        currentToken = data.token;
                         document.getElementById('login-result').innerText = '登入成功：' + data.username;
                     } else {
                         document.getElementById('login-result').innerText = '登入失敗：' + data;
                     }
+                });
+        }
+
+        function createOrder() {
+            const body = {
+                stockCode: document.getElementById('order-stockCode').value,
+                orderType: document.getElementById('order-type').value,
+                quantity: Number(document.getElementById('order-quantity').value),
+                price: Number(document.getElementById('order-price').value)
+            };
+
+            fetch('/api/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + currentToken
+                },
+                body: JSON.stringify(body)
+            })
+                .then(res => {
+                    return res.text().then(text => {
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch (e) {
+                            data = text;
+                        }
+                        return { status: res.status, data: data };
+                    });
+                })
+                .then(result => {
+                    if (result.status === 200) {
+                        document.getElementById('order-result').innerText = '下單成功：訂單編號 ' + result.data.id;
+                    } else {
+                        document.getElementById('order-result').innerText = '下單失敗：' + result.data;
+                    }
+                });
+        }
+
+        function getMyOrders() {
+            fetch('/api/orders/mine', {
+                headers: {
+                    'Authorization': 'Bearer ' + currentToken
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('orders-list').innerText = JSON.stringify(data, null, 2);
                 });
         }
     </script>
