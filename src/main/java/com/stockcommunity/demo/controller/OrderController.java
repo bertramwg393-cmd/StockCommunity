@@ -56,4 +56,18 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
+    @PatchMapping("/{orderId}/cancel")
+    public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
+        try {
+            Long memberId = getCurrentMemberId();
+            Order order = orderService.cancelOrder(orderId, memberId);
+            return ResponseEntity.ok(order);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (IllegalStateException e) {
+        return ResponseEntity.status(409).body(e.getMessage());
+        }
+    }
 }
