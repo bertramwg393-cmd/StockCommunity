@@ -24,6 +24,8 @@ public class OrderController {
         this.userRepository = userRepository;
     }
 
+    // 跟 WatchlistController 完全同一套邏輯：從 SecurityContext 解出 username 再查 memberId
+    // 不接受前端自己傳 memberId
     private Long getCurrentMemberId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
@@ -32,6 +34,7 @@ public class OrderController {
         return user.getId();
     }
 
+    // 建立新訂單，歸屬於目前登入的會員
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody CreateOrderRequest request) {
         try {
@@ -49,6 +52,7 @@ public class OrderController {
         }
     }
 
+    // 查目前登入者自己的所有訂單
     @GetMapping("/mine")
     public ResponseEntity<List<Order>> getMyOrders() {
         Long memberId = getCurrentMemberId();
@@ -56,6 +60,22 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
+    // 查單一訂單前，先確認這張單是不是自己的
+    @GetMapping("/{orderId}")
+    public ResponseEntity<?> getOrder(@PathVariable Long orderId) {
+        try {
+            Long memberId = getCurrentMemberId();
+            Order order = orderService.findOrderById(orderId);
+            if (!order.getMemberId().equals(memberId)) {
+                return ResponseEntity.status(403).body("無權限查看此訂單");
+            }
+            return ResponseEntity.ok(order);
+        } catch(IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 取消訂單，Service 層已經包含擁有權與狀態檢查
     @PatchMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
         try {

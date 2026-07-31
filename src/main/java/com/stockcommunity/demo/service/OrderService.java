@@ -34,13 +34,18 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-
+    // 查目前登入者自己的所有訂單
     public List<Order> findOrdersByMemberId(Long memberId) {
         return orderRepository.findByMemberId(memberId);
     }
 
-    // 取消訂單，將訂單狀態設為已取消
+    // 依 id 找單一訂單，找不到就丟例外，統一在 Controller 層接
+    public Order findOrderById(Long orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("找不到訂單"));
+    }
 
+    // 取消訂單，將訂單狀態設為已取消
     public Order cancelOrder(Long orderId, Long memberId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("找不到訂單"));
