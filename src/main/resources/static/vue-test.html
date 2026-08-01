@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>StockCommunity Vue 測試頁</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+<div id="app">
+    <h2>註冊</h2>
+    <input v-model="regUsername" placeholder="帳號"><br>
+    <input v-model="regPassword" type="password" placeholder="密碼"><br>
+    <input v-model="regEmail" placeholder="Email"><br>
+    <button @click="register">註冊</button>
+    <p>{{ regResult }}</p>
+
+    <hr>
+
+    <h2>登入</h2>
+    <input v-model="loginUsername" placeholder="帳號"><br>
+    <input v-model="loginPassword" type="password" placeholder="密碼"><br>
+    <button @click="login">登入</button>
+    <p>{{ loginResult }}</p>
+
+    <hr>
+
+    <h2>建立訂單</h2>
+    <input v-model="orderStockCode" placeholder="股票代號"><br>
+    <input v-model="orderType" placeholder="BUY 或 SELL"><br>
+    <input v-model.number="orderQuantity" type="number" placeholder="股數"><br>
+    <input v-model.number="orderPrice" type="number" placeholder="價格"><br>
+    <button @click="createOrder">送出訂單</button>
+    <p>{{ orderResult }}</p>
+
+    <button @click="getMyOrders">查詢我的訂單</button>
+
+    <ul>
+        <li v-for="order in orders" :key="order.id">
+            #{{ order.id }} {{ order.stockCode }} {{ order.orderType }}
+            {{ order.quantity }} 股 @ {{ order.price }}
+            狀態: {{ order.status }}
+            <button v-if="order.status === 'PENDING'" @click="cancelOrder(order.id)">取消</button>
+        </li>
+    </ul>
+</div>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                regUsername: '',
+                regPassword: '',
+                regEmail: '',
+                regResult: '',
+
+                loginUsername: '',
+                loginPassword: '',
+                loginResult: '',
+                currentToken: '',
+
+                orderStockCode: '',
+                orderType: '',
+                orderQuantity: 0,
+                orderPrice: 0,
+                orderResult: '',
+
+                orders: []
+            };
+        },
+        methods: {
+            async register() {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: this.regUsername,
+                        password: this.regPassword,
+                        email: this.regEmail
+                    })
+                });
+                const data = await res.json().catch(() => null);
+                this.regResult = res.ok ? '註冊成功' + data.username : '註冊失敗' + JSON.stringify(data);
+            },
+
+            async login() {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: this.loginUsername,
+                        password: this.loginPassword
+                    })
+                });
+                const data = await res.json().catch(() => null);
+                if (res.ok) {
+                    this.currentToken = data.token;
+                    this.loginResult = '登入成功' + data.username;
+                } else {
+                    this.loginResult = '登入失敗' + JSON.stringify(data);
+                }
+            },
+
+            async createOrder() {
+                const res = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + this.currentToken
+                    },
+                    body: JSON.stringify({
+                        stockCode: this.orderStockCode,
+                        orderType: this.orderType,
+                        quantity: this.orderQuantity,
+                        price: this.orderPrice
+                    })
+                });
+                const data = await res.json().catch(() => null);
+                if (res.ok) {
+                    this.orderResult = '下單成功：訂單編號 ' + data.id;
+                    await this.getMyOrders();
+                } else {
+                    this.orderResult = '下單失敗：' + JSON.stringify(data);
+                }
+            },
+
+            async getMyOrders() {
+                const res = await fetch('/api/orders/mine', {
+                    headers: { 'Authorization': 'Bearer ' + this.currentToken }
+                });
+                this.orders = await res.json();
+            },
+
+            async cancelOrder(orderId) {
+                const res = await fetch(`/api/orders/${orderId}/cancel`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': 'Bearer ' + this.currentToken }
+                });
+                const data = await res.json().catch(() => null);
+                if (res.ok) {
+                    await this.getMyOrders();
+                } else {
+                    alert('取消失敗：' + JSON.stringify(data));
+                }
+            }
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
