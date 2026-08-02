@@ -1,6 +1,8 @@
 package com.stockcommunity.demo.service;
 
+import com.stockcommunity.demo.entity.Order;
 import com.stockcommunity.demo.entity.Trade;
+import com.stockcommunity.demo.repository.OrderRepository;
 import com.stockcommunity.demo.repository.TradeRepository;
 import org.springframework.stereotype.Service;
 
@@ -13,9 +15,11 @@ import java.util.stream.Stream;
 public class TradeService {
 
     private final TradeRepository tradeRepository;
+    private final OrderRepository orderRepository;
 
-    public TradeService(TradeRepository tradeRepository) {
+    public TradeService(TradeRepository tradeRepository, OrderRepository orderRepository) {
         this.tradeRepository = tradeRepository;
+        this.orderRepository = orderRepository;
     }
 
     // 撮合成功後呼叫，記錄一筆成交
@@ -41,6 +45,16 @@ public class TradeService {
         return Stream.concat(asBuyer.stream(), asSeller.stream())
                 .collect(Collectors.toList());
     }
+
+    // 查登入者名下所有訂單相關的成交紀錄：先查出這個人的所有 Order，再逐筆撈成交紀錄合併
+    public List<Trade> findTradesByMemberId(Long memberId) {
+        List<Order> myOrders = orderRepository.findByMemberId(memberId);
+
+        return myOrders.stream()
+                .flatMap(order -> findTradesByOrderId(order.getId()).stream())
+                .collect(Collectors.toList());
+    }
+
 
     // 查某檔股票的所有成交紀錄
     public List<Trade> findTradesByStockCode(String stockCode) {

@@ -36,13 +36,11 @@ public class TradeController {
     // 成交紀錄不該讓前端直接新增，應該由撮合引擎內部呼叫 TradeService.createTrade()
     // 一旦開放 POST，使用者就能自己捏造假的成交紀錄，等於偽造交易歷史
 
-    // 查詢目前登入者相關的所有成交紀錄（不管當初是買方還是賣方）
-    // 目前只用 memberId 查 Order 太複雜，先直接依訂單串查（等 Order 增加關聯查詢時可再優化）
+    // 查詢目前登入者相關的所有成交紀錄（不管當初是買方還是賣方，任何一筆訂單只要有成交都會顯示）
     @GetMapping("/mine")
-    public ResponseEntity<List<Trade>> getMyTrades(@RequestParam Long orderId) {
+    public ResponseEntity<List<Trade>> getMyTrades() {
         Long memberId = getCurrentMemberId();
-        // TODO: 這裡先簡化用 orderId 查，之後應該改成先查出該使用者名下所有 Order，再逐筆查成交紀錄
-        List<Trade> trades = tradeService.findTradesByOrderId(orderId);
+        List<Trade> trades = tradeService.findTradesByMemberId(memberId);
         return ResponseEntity.ok(trades);
     }
 
