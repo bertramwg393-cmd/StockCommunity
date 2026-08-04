@@ -69,6 +69,36 @@ public class HoldingService {
         return holdingRepository.save(holding);
     }
 
+    // 賣出成交後呼叫：扣減持股，賣到 0 股就直接刪除這筆持股紀錄
+    public void applySellTrade(
+            Long memberId,
+            String stockCode,
+            Integer tradeQuantity) {
+        Holding holding = holdingRepository.findByMemberIdAndStockCode(memberId, stockCode)
+                .orElseThrow(() -> new IllegalArgumentException("找不到持股紀錄，無法賣出未持有的股票"));
+        // 防呆：不能賣出超過目前實際持有的股數
+        if (tradeQuantity > holding.getQuantity()) {
+            throw new IllegalStateException(
+                    "賣出股數超過持有股數，目前持有：" + holding.getQuantity() + "，欲賣出：" + tradeQuantity);
+        }
+
+        int newQuantity = holding.getQuantity() - tradeQuantity;
+
+        // 設計決策：賣到剩 0 股時，這裡選擇「直接刪除這筆持股紀錄」
+        // 另一種做法是「保留紀錄、quantity 設成 0」，兩種都合理：
+        //   - 刪除：資料庫乾淨，查詢時不會出現「持有 0 股」這種空紀錄
+        //   - 保留 0：可以留下「這個人曾經持有過這檔股票」的痕跡，方便之後做交易歷史分析
+        // 目前選擇刪除，之後如果需要歷史痕跡，改成 setQuantity(0) + save 即可，不用整個重寫
+        if (newQuantity == 0) {
+            holdingRepository.delete(holding);
+            return;
+        }
+
+        // 賣出不影響均價，只需要扣減股數
+        holding.setQuantity(newQuantity);
+        holdingRepository.save(holding);
+    }
+
     // 查某個使用者的所有持股
     public List<Holding> findHoldingsByMemberId(Long memberId) {
         return holdingRepository.findByMemberId(memberId);
