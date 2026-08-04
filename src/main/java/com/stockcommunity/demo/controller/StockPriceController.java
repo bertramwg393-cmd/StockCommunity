@@ -47,6 +47,7 @@ public class StockPriceController {
     }
 
     // 查某檔股票在某一天相對於前一天的漲跌幅
+    // 範例：GET /api/stock-prices/2330/change-percent?tradeDate=2026-08-04&previousDate=2026-08-01
     @GetMapping("/{stockCode}/change-percent")
     public ResponseEntity<?> getChangePercent(
             @PathVariable String stockCode,
